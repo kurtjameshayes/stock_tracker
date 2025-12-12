@@ -150,13 +150,15 @@ class TestGetStockBySymbol:
 
     @pytest.mark.asyncio
     async def test_get_stock_by_symbol_not_found(self, stock_service, mock_stock_repo, mock_redis):
-        """Test retrieving non-existent stock returns None."""
+        """Test retrieving non-existent stock raises 404."""
+        from fastapi import HTTPException
         mock_redis.get.return_value = None
         mock_stock_repo.get_by_symbol.return_value = None
 
-        stock = await stock_service.get_stock_by_symbol("INVALID")
+        with pytest.raises(HTTPException) as exc_info:
+            await stock_service.get_stock_by_symbol("INVALID")
 
-        assert stock is None
+        assert exc_info.value.status_code == 404
 
 
 class TestSearchStocks:
