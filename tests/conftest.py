@@ -4,6 +4,13 @@ Pytest configuration and fixtures.
 Provides common fixtures for testing.
 """
 
+import os
+
+# Set required environment variables BEFORE importing settings
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
+os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret-key-for-testing-only")
+os.environ.setdefault("MONGODB_URL", "mongodb://localhost:27017")
+
 import pytest
 import asyncio
 from datetime import datetime
