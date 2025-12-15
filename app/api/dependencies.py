@@ -116,7 +116,10 @@ async def get_alert_service(
     history_repo = AlertHistoryRepository(db)
     price_repo = StockPriceRepository(db)
 
-    return AlertService(alert_repo, history_repo, price_repo)
+    # Create analytics service for technical indicator alerts
+    analytics_service = AnalyticsService(price_repo)
+
+    return AlertService(alert_repo, history_repo, price_repo, analytics_service)
 
 
 async def get_watchlist_service(
