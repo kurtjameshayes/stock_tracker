@@ -4,10 +4,12 @@ Analytics API endpoints.
 Handles technical analysis, indicators, and trading signals.
 """
 
+from typing import List
 from fastapi import APIRouter, Depends, Path, HTTPException, status
 from app.schemas.analytics import (
     MovingAverageData, MomentumIndicators, TrendIndicators,
-    VolatilityIndicators, VolumeIndicators
+    VolatilityIndicators, VolumeIndicators, TradingSignal,
+    SupportResistance, ComprehensiveAnalysis
 )
 from app.services.analytics_service import AnalyticsService
 from app.services.stock_service import StockService
@@ -106,3 +108,77 @@ async def get_volume_indicators(
     stock = await stock_service.get_stock_by_symbol(symbol)
     volume = await analytics_service.get_volume_indicators(stock["_id"])
     return volume
+
+
+@router.get("/{symbol}/signals", response_model=List[TradingSignal])
+async def get_trading_signals(
+    symbol: str,
+    current_user_id: str = Depends(get_current_user_id),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
+    stock_service: StockService = Depends(get_stock_service)
+):
+    """
+    Get trading signals for a stock.
+
+    Returns buy/sell signals based on technical indicator analysis
+    including RSI oversold/overbought conditions and MACD crossovers.
+    """
+    stock = await stock_service.get_stock_by_symbol(symbol)
+    if not stock:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Stock {symbol} not found"
+        )
+
+    signals = await analytics_service.get_trading_signals(stock["_id"])
+    return signals
+
+
+@router.get("/{symbol}/support-resistance", response_model=SupportResistance)
+async def get_support_resistance(
+    symbol: str,
+    current_user_id: str = Depends(get_current_user_id),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
+    stock_service: StockService = Depends(get_stock_service)
+):
+    """
+    Get support and resistance levels for a stock.
+
+    Returns support levels, resistance levels, pivot points, and Fibonacci retracements.
+    """
+    stock = await stock_service.get_stock_by_symbol(symbol)
+    if not stock:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Stock {symbol} not found"
+        )
+
+    support_resistance = await analytics_service.get_support_resistance(stock["_id"])
+    return support_resistance
+
+
+@router.get("/{symbol}/comprehensive", response_model=ComprehensiveAnalysis)
+async def get_comprehensive_analysis(
+    symbol: str,
+    current_user_id: str = Depends(get_current_user_id),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
+    stock_service: StockService = Depends(get_stock_service)
+):
+    """
+    Get comprehensive technical analysis for a stock.
+
+    Returns all technical indicators, trading signals, support/resistance levels,
+    and an overall technical rating with risk assessment.
+    """
+    stock = await stock_service.get_stock_by_symbol(symbol)
+    if not stock:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Stock {symbol} not found"
+        )
+
+    analysis = await analytics_service.get_comprehensive_analysis(
+        stock_id=stock["_id"],
+        symbol=symbol
+    )
+    return analysis
